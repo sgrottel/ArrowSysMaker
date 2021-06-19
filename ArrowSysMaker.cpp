@@ -10,6 +10,9 @@
 #include "PLYWriter.h"
 
 void makeArrow(std::vector<Vertex>& ver, std::vector<glm::uvec3>& tri);
+void merge(
+	std::vector<Vertex>& ver, std::vector<glm::uvec3>& tri,
+	std::vector<Vertex>& aver, std::vector<glm::uvec3>& atri);
 
 int main()
 {
@@ -26,8 +29,23 @@ int main()
 			v.c = glm::u8vec3{ 255, 0, 0 };
 		}
 
-		ver = aver;
-		tri = atri;
+		merge(ver, tri, aver, atri);
+
+		for (auto& v : aver) {
+			v.v = glm::vec3{ v.v.y, v.v.x, -v.v.z };
+			v.n = glm::vec3{ v.n.y, v.n.x, -v.n.z };
+			v.c = glm::u8vec3{ 0, 255, 0 };
+		}
+
+		merge(ver, tri, aver, atri);
+
+		for (auto& v : aver) {
+			v.v = glm::vec3{ -v.v.x, v.v.z, v.v.y };
+			v.n = glm::vec3{ -v.n.x, v.n.z, v.n.y };
+			v.c = glm::u8vec3{ 0, 0, 255 };
+		}
+
+		merge(ver, tri, aver, atri);
 
 		writePLY("C:\\Downloads\\arrowsys.ply", ver, tri);
 	}
@@ -60,12 +78,12 @@ void makeArrow(std::vector<Vertex>& ver, std::vector<glm::uvec3>& tri)
 	ver.clear();
 	tri.clear();
 
-	ver.push_back({ {-5, 0, 0}, {-1, 0, 0}, c }); //  0
+	ver.push_back({ {-6, 0, 0}, {-1, 0, 0}, c }); //  0
 
 	for (int i = 0; i < 8; ++i)
-		ver.push_back({ {-5, r[i]}, {-1, 0, 0}, c }); //  1-8
+		ver.push_back({ {-6, r[i]}, {-1, 0, 0}, c }); //  1-8
 	for (int i = 0; i < 8; ++i)
-		ver.push_back({ {-5, r[i]}, {0, r[i]}, c }); //  9-16
+		ver.push_back({ {-6, r[i]}, {0, r[i]}, c }); //  9-16
 	for (int i = 0; i < 8; ++i)
 		ver.push_back({ {-g[i], r[i]}, {0, r[i]}, c }); //  17-24
 	for (int i = 0; i < 8; ++i)
@@ -121,4 +139,14 @@ void makeArrow(std::vector<Vertex>& ver, std::vector<glm::uvec3>& tri)
 	for (auto &v : ver) {
 		v.n = glm::normalize(v.n);
 	}
+}
+
+void merge(
+	std::vector<Vertex>& ver, std::vector<glm::uvec3>& tri,
+	std::vector<Vertex>& aver, std::vector<glm::uvec3>& atri)
+{
+	size_t to = ver.size();
+	ver.insert(ver.end(), aver.begin(), aver.end());
+	for (glm::uvec3 const& t : atri)
+		tri.push_back(t + glm::uvec3{ to });
 }
